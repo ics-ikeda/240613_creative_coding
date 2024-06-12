@@ -1,0 +1,106 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+</head>
+<body>
+<canvas id="myCanvas" width="960" height="540"></canvas>
+
+<script>
+  // 初期化
+  const canvas = document.getElementById("myCanvas");
+  const ctx = canvas.getContext("2d");
+
+  let oldX;
+  let oldY;
+  let flag = false;
+  const radius = 50;
+
+  const ball = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    vx: 0, // 初期の速さ
+    vy: 0,
+  };
+
+  canvas.addEventListener("mousedown", handleDown);
+  canvas.addEventListener("mousemove", handleMove);
+  canvas.addEventListener("mouseup", handleUp);
+
+  function handleDown(event) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    if (
+            Math.pow(mouseX - ball.x, 2) + Math.pow(mouseY - ball.y, 2) <=
+            Math.pow(radius, 2)
+    ) {
+      flag = true;
+      oldX = mouseX;
+      oldY = mouseY;
+    }
+  }
+
+  function handleMove(event) {
+    if (flag) {
+      const rect = canvas.getBoundingClientRect();
+      ball.x = event.clientX - rect.left;
+      ball.y = event.clientY - rect.top;
+    }
+  }
+
+  function handleUp(event) {
+    if (flag) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      ball.vx = mouseX - oldX;
+      ball.vy = mouseY - oldY;
+
+      flag = false;
+    }
+  }
+
+  tick();
+
+  // 更新処理
+  function tick() {
+    if (!flag) {
+      ball.vy += 0.5; // 重力
+      ball.vx *= 0.97; // 摩擦
+      ball.vy *= 0.97;
+
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+
+      if (ball.x + radius > canvas.width) {
+        ball.x = canvas.width - radius;
+        ball.vx *= -0.7;
+      } else if (ball.x - radius < 0) {
+        ball.x = radius;
+        ball.vx *= -0.7;
+      }
+      if (ball.y + radius > canvas.height) {
+        ball.y = canvas.height - radius;
+        ball.vy *= -0.7;
+      } else if (ball.y - radius < 0) {
+        ball.y = radius;
+        ball.vy *= -0.7;
+      }
+    }
+
+    // 描画処理
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "DarkRed";
+    ctx.fill();
+    ctx.closePath();
+
+    // 時間経過
+    requestAnimationFrame(tick);
+  }
+</script>
+</body>
+</html>

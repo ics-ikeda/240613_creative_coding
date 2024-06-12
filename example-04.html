@@ -1,0 +1,96 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body {
+      background: black;
+    }
+
+    #myCanvas {
+      background: white;
+    }
+  </style>
+</head>
+<body>
+<canvas id="myCanvas" width="960" height="540"></canvas>
+<script>
+  // 初期化
+  const canvas = document.getElementById("myCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const radius = 10; // 半径
+
+  const balls = []; // ボールの配列
+  // 繰り返し文で大量のボールを生成
+  for (let i = 0; i < 100; i++) {
+    const ball = {
+      x: canvas.width * Math.random(), // 初期の座標
+      y: canvas.height * Math.random(),
+      vx: 100 * (Math.random() - 0.5), // 初期の速度
+      vy: 20 * (Math.random() - 0.5),
+      color: `hsl(${360 * Math.random()}, 100%, 50%)`,
+    };
+    balls.push(ball);
+  }
+
+  tick();
+
+  // 更新処理
+  function tick() {
+    // 通常塗り
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; // 薄くぬることで残像効果
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < balls.length; i++) {
+      const ball = balls[i];
+
+      // 重力
+      ball.vy += 0.1;
+
+      // 摩擦
+      ball.vx *= 0.995;
+      ball.vy *= 0.995;
+
+      // 速度を座標に展開
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+
+      // 画面下側の壁
+      if (ball.y > 540 - radius) {
+        ball.y = 540 - radius; // 位置調整
+        ball.vy *= -1; // 跳ね返り
+      }
+      // 画面右側の壁
+      if (ball.x > 960 - radius) {
+        ball.x = 960 - radius; // 位置調整
+        ball.vx *= -1; // 跳ね返り
+      }
+      // 画面左側の壁
+      if (ball.x < radius) {
+        ball.x = radius; // 位置調整
+        ball.vx *= -1; // 跳ね返り
+      }
+
+      // 描画開始
+      ctx.beginPath();
+      // 円の位置(X, Y座標)、大きさ、開始角度、終了角度
+      ctx.arc(ball.x, ball.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = ball.color; // 色
+      ctx.fill(); // 塗る
+      ctx.closePath(); // 描画終了
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  // 強制的にもう一回動かす
+  canvas.addEventListener("click", () => {
+    for (let i = 0; i < balls.length; i++) {
+      const ball = balls[i];
+      ball.vx = 100 * (Math.random() - 0.5);
+      ball.vy = -20 * Math.random();
+    }
+  });
+</script>
+</body>
+</html>

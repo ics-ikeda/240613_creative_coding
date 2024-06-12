@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Particle Text with Canvas2D</title>
+</head>
+<body>
+<canvas id="canvasMain" width="960" height="960"></canvas>
+<canvas
+        id="canvasForce"
+        width="960"
+        height="960"
+        style="display: none"
+></canvas>
+<script>
+  const balls = [];
+  const gravity = 0.2;
+  const canvasW = 960,
+          canvasH = 960;
+  let contextMain, forcePixels;
+
+  init();
+
+  // 初期化
+  async function init() {
+    const image = new Image();
+    image.src = "imgs/forcemap.png";
+    await image.decode();
+
+    const canvasMain = document.getElementById("canvasMain");
+    contextMain = canvasMain.getContext("2d");
+
+    const forceMap = document
+            .getElementById("canvasForce")
+            .getContext("2d");
+    forceMap.drawImage(image, 0, 0);
+    forcePixels = forceMap.getImageData(0, 0, canvasW, canvasH);
+
+    for (let i = 0; i < 4000; i++) {
+      emit(
+              Math.random() * canvasW,
+              Math.random() * canvasH,
+              Math.random() * 1.5 + 1.5,
+      );
+    }
+
+    tick();
+  }
+
+  // 更新処理
+  function tick() {
+    contextMain.fillStyle = "rgba(0, 0, 0, 0.08)";
+    contextMain.fillRect(0, 0, canvasW, canvasH);
+
+    for (let i = 0; i < balls.length; i++) {
+      const p = balls[i];
+      // 重力
+      p.vy += gravity * p.s;
+      const d = 1 - (getPixel(p.x, p.y) / 255) * 0.8;
+      p.vy *= d;
+      p.y += p.vy;
+
+      contextMain.fillStyle = p.color;
+      contextMain.fillRect(p.x, p.y, 2, 2);
+
+      if (p.y > canvasH) {
+        balls.splice(i, 1);
+        i--;
+      }
+    }
+
+    // 毎フレーム適当な数のパーティクルを追加
+    for (let i = 0; i < 6; i++) {
+      emit(Math.random() * canvasW, 0, Math.random() * 1.5 + 1.5);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  // 新しいパーティクルを発生させる
+  function emit(x, y, s) {
+    const p = {
+      x: x,
+      y: y,
+      vx: 0,
+      vy: 0,
+      s: s,
+      color: `hsl(${(x / canvasW) * 360}, 100%, 50%)`,
+      size: Math.random() < 0.5 ? 1 : 2,
+    };
+    balls.push(p);
+  }
+
+  // フォースマップからピクセルの明るさを取得
+  function getPixel(x, y) {
+    let a = 0;
+    if (x >= 0 && x < canvasW && y >= 0 && y < canvasH) {
+      const idx = (Math.floor(x) + Math.floor(y) * canvasW) * 4;
+      a = forcePixels.data[idx + 3];
+    }
+    return a;
+  }
+</script>
+</body>
+</html>

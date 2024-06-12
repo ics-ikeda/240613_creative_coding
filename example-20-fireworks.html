@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+  <title>Hanabi</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #333;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="960" height="540"></canvas>
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const WIDTH = 960;
+  const HEIGHT = 540;
+  const balls = [];
+
+  function hanabi() {
+    // 花火の発生座標
+    const sx = Math.random() * WIDTH;
+    const sy = (Math.random() * HEIGHT) / 3;
+    // たくさん作成
+    for (let i = 0; i < 200; i++) {
+      const radius = Math.sqrt(Math.random()) * 10;
+      const angle = Math.random() * Math.PI * 2;
+      const vx = Math.cos(angle) * radius;
+      const vy = Math.sin(angle) * radius;
+
+      const ball = {
+        x: sx,
+        y: sy,
+        vx: vx,
+        vy: vy,
+        color: "hsl(0, 50%, 100%)",
+        life: 30,
+      };
+      balls.push(ball);
+    }
+  }
+
+  // 更新処理
+  function tick() {
+    // 半透明に塗りつぶし
+    ctx.fillStyle = `rgba(0, 0, 0, 0.1)`;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    for (let i = balls.length - 1; i >= 0; i--) {
+      const ball = balls[i];
+      // 重力
+      ball.vy += 0.5;
+      // 摩擦
+      ball.vx *= 0.92;
+      ball.vy *= 0.92;
+      // 速度を座標へ
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+      // 塗り
+      ctx.fillStyle = ball.color;
+      ctx.fillRect(ball.x, ball.y, 2, 2);
+
+      // 寿命
+      ball.life = ball.life - 1;
+      if (ball.life < 0) {
+        // 配列から消す
+        balls.splice(i, 1);
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  setInterval(hanabi, 500); // 花火の発生
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>

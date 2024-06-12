@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+  <title>Attractor01</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: black;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const SIZE = 930;
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+
+  let isPlay = true;
+  let count = 0,
+          maxden = 0;
+  let a, b, c, d, nx, ny, ox, oy, lmd;
+  const den = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+  const pre = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+  const sensitivity = 0.0198411;
+  const hueBase = 180;
+
+  function reparam(mx = 0, my = 0) {
+    a = map(mx, 0, SIZE, -1, 1) * sensitivity;
+    b = map(my, 0, SIZE, -1, 1) * sensitivity;
+    c = map(mx, 0, SIZE, 1, -1) * sensitivity;
+    d = map(my, 0, SIZE, 1, -1) * sensitivity;
+    ox = oy = SIZE / 2;
+    update(true, 1, 100);
+  }
+
+  function update(clear, s, f) {
+    if (clear) {
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE; j++) {
+          den[i][j] = pre[i][j] = 0;
+        }
+      }
+    }
+    for (let i = 0; i < s; i++) {
+      for (let j = 0; j < 10000; j++) {
+        nx =
+                (Math.sin(a * oy) - Math.cos(b * ox)) * 93 +
+                SIZE / 2 +
+                Math.random() * 0.002 -
+                0.001;
+        ny =
+                (Math.sin(c * ox) - Math.cos(d * oy)) * 93 +
+                SIZE / 2 +
+                Math.random() * 0.002 -
+                0.001;
+        if (nx > 0 && nx < SIZE && ny > 0 && ny < SIZE) {
+          if ((den[Math.floor(nx)][Math.floor(ny)] += 1) > maxden)
+            maxden = den[Math.floor(nx)][Math.floor(ny)];
+          pre[Math.floor(nx)][Math.floor(ny)] = ox;
+        }
+        ox = nx;
+        oy = ny;
+      }
+    }
+    lmd = Math.log(maxden);
+    if (clear) ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.compositeOperation = "lighter";
+    for (let i = 0; i < SIZE; i++) {
+      for (let j = 0; j < SIZE; j++) {
+        if (den[i][j] > 0) {
+          const le = Math.log(den[i][j]);
+          // const color = HSVtoRGB(hueBase + hueBase * (pre[i][j] / SIZE), 0.5 - 0.5 * (le / lmd), (le + f) / lmd);
+          // ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+
+          // HSLで指定
+          ctx.fillStyle = `hsl(${hueBase + hueBase * (pre[i][j] / SIZE)}, 50%, ${((le + f) / lmd) * 100}%)`;
+
+          ctx.fillRect(i, j, 1, 1);
+        }
+      }
+    }
+  }
+
+  function loop() {
+    if (isPlay) {
+      count++;
+      if (count > 255) isPlay = false;
+      update(false, 4, 0);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function map(value, start1, stop1, start2, stop2) {
+    return (
+            start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1))
+    );
+  }
+
+  canvas.addEventListener("mousedown", () => {
+    canvas.addEventListener("mousemove", onMouseMove);
+  });
+
+  canvas.addEventListener("mouseup", () => {
+    canvas.removeEventListener("mousemove", onMouseMove);
+    isPlay = true;
+    count = 0;
+  });
+
+  function onMouseMove(event) {
+    isPlay = false;
+    reparam(event.offsetX, event.offsetY);
+  }
+
+  reparam();
+  loop();
+</script>
+</body>
+</html>
